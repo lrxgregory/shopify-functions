@@ -1,0 +1,24 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "8228a847b1dd6957f84af118d81b2578"
+application_url = "https://shopify.dev/apps/default-app-home"
+embedded = true
+name = "checkout-function"
+handle = "checkout-function-15"
+
+[webhooks]
+api_version = "2025-04"
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "read_delivery_customizations,write_delivery_customizations"
+
+[auth]
+redirect_urls = [ "https://shopify.dev/apps/default-app-home/api/auth" ]
+
+[pos]
+embedded = false
+
+[build]
+dev_store_url = "testboutiqueclient.myshopify.com"
+include_config_on_deploy = true

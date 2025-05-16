@@ -1,0 +1,30 @@
+query InstallationDeliveryInput {
+  cart {
+    lines {
+      merchandise {
+        ... on ProductVariant {
+          product {
+            title
+            metafield(namespace: "shipping", key: "option_installation") {
+              value
+            }
+          }
+        }
+      }
+    }
+    deliveryGroups {
+      deliveryOptions {
+        handle
+        title
+      }
+    }
+  }
+  deliveryCustomization {
+    metafield(
+      namespace: "$app:installation-delivery-option"
+      key: "function-configuration"
+    ) {
+      value
+    }
+  }
+}

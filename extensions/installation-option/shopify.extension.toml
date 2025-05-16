@@ -1,0 +1,21 @@
+api_version = "2025-01"
+
+[[extensions]]
+name = "t:name"
+handle = "installation-option"
+type = "function"
+
+description = "t:description"
+
+  [[extensions.targeting]]
+  target = "purchase.delivery-customization.run"
+  input_query = "src/installation_option.graphql"
+  export = "run"
+
+  [extensions.build]
+  command = ""
+  path = "dist/function.wasm"
+
+  [extensions.ui.paths]
+  create = "/"
+  details = "/"

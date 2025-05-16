@@ -1,0 +1,30 @@
+query BulkDeliveryInput {
+  cart {
+    lines {
+      merchandise {
+        ... on ProductVariant {
+          product {
+            title
+            metafield(namespace: "shipping", key: "requires_bulk_delivery") {
+              value
+            }
+          }
+        }
+      }
+    }
+    deliveryGroups {
+      deliveryOptions {
+        handle
+        title
+      }
+    }
+  }
+  deliveryCustomization {
+    metafield(
+      namespace: "$app:bulk-delivery-option"
+      key: "function-configuration"
+    ) {
+      value
+    }
+  }
+}
