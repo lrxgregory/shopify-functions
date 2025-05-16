@@ -1,79 +1,152 @@
-# Shopify App Template - Extension only
+# 🧩 Shopify Functions – Conditional Delivery Options
 
-This is a template for building an [extension-only Shopify app](https://shopify.dev/docs/apps/build/app-extensions/build-extension-only-app). It contains the basics for building a Shopify app that uses only app extensions.
+This project contains two custom **Shopify Functions** used to **dynamically hide delivery options** based on the contents of the cart.
 
-This template doesn't include a server or the ability to embed a page in the Shopify Admin. If you want either of these capabilities, choose the [Remix app template](https://github.com/Shopify/shopify-app-template-remix) instead.
+Available functions:
 
-Whether you choose to use this template or another one, you can use your preferred package manager and the Shopify CLI with [these steps](#installing-the-template).
+- [`bulk-delivery-option`](./extensions/bulk-delivery-option)
+- [`installation-delivery-option`](./extensions/installation-delivery-option)
 
-## Benefits
+---
 
-Shopify apps are built on a variety of Shopify tools to create a great merchant experience. The [create an app](https://shopify.dev/docs/apps/getting-started/create) tutorial in our developer documentation will guide you through creating a Shopify app.
+## 🧠 What are Shopify Functions?
 
-This app template does little more than install the CLI and scaffold a repository.
+**Shopify Functions** allow developers to inject **custom backend logic** directly into Shopify's checkout and other critical paths. They are **server-side, high-performance**, and compiled to WebAssembly (Wasm).
 
-## Getting started
+In this project, we use **delivery customization functions** to:
 
-### Requirements
+- Hide delivery methods depending on the products in the cart.
+- Prevent customer mistakes that could lead to fulfillment issues.
 
-1. You must [download and install Node.js](https://nodejs.org/en/download/) if you don't already have it.
-1. You must [create a Shopify partner account](https://partners.shopify.com/signup) if you don’t have one.
-1. You must create a store for testing if you don't have one, either a [development store](https://help.shopify.com/en/partners/dashboard/development-stores#create-a-development-store) or a [Shopify Plus sandbox store](https://help.shopify.com/en/partners/dashboard/managing-stores/plus-sandbox-store).
+---
 
-### Installing the template
+## 🚚 1. `bulk-delivery-option` – XXL Delivery
 
-This template can be installed using your preferred package manager:
+### 🎯 Purpose
 
-Using yarn:
+Manage orders that contain bulky products requiring a specific "Bulk Delivery" option.
 
-```shell
-yarn create @shopify/app
+### 🔍 Business Rules
+
+- If **all products** in the cart are marked as `bulk`, we **hide** the `Standard` and `Express` delivery options.
+- If **at least one product** is **not bulk**, we **hide** the `Bulk` delivery option. A **split shipment** logic will then be handled upstream.
+
+### 📦 Identifying bulk products
+
+Each product is tagged with a metafield (e.g., `namespace:delivery`, `key:bulk`) set to `"true"` when it requires bulk delivery.
+
+```ts
+product.metafield?.value === "true";
 ```
 
-Using npm:
+## 🛠 Example Input / Output
 
-```shell
-npm init @shopify/app@latest
+### Input:
+
+```json
+{
+  "cart": {
+    "lines": [
+      {
+        "merchandise": {
+          "product": {
+            "title": "Giant Couch",
+            "metafield": { "value": "true" }
+          }
+        }
+      }
+    ],
+    "deliveryGroups": [
+      {
+        "deliveryOptions": [
+          { "handle": "...", "title": "Standard" },
+          { "handle": "...", "title": "Express" },
+          { "handle": "...", "title": "Bulk" }
+        ]
+      }
+    ]
+  }
+}
 ```
 
-Using pnpm:
+### Output:
 
-```shell
-pnpm create @shopify/app@latest
+```json
+{
+  "operations": [
+    {
+      "hide": {
+        "deliveryOptionHandle": "standard"
+      }
+    }
+  ]
+}
 ```
 
-This will clone the template and install the required dependencies.
+## 🛠 2. installation-delivery-option – Delivery + Installation
 
-#### Local Development
+### 🎯 Purpose
 
-[The Shopify CLI](https://shopify.dev/docs/apps/tools/cli) connects to an app in your Partners dashboard. It provides environment variables and runs commands in parallel.
+Hide the **"Delivery + Installation"** option when no product in the cart requires installation.
 
-You can develop locally using your preferred package manager. Run one of the following commands from the root of your app.
+### 🔍 Business Rules
 
-Using yarn:
+Products may define a metafield (e.g., `namespace:delivery`, `key:installation`) with value `"true"`.
 
-```shell
-yarn dev
+If **no product** in the cart requires installation → the delivery option is **hidden**.
+
+### 💡 Example
+
+- Couch = installation: true
+- Lamp = installation: false
+
+→ If **all products** have installation set to false → hide the delivery option.
+
+---
+
+## 🧪 Running Tests
+
+The functions are unit tested with [Vitest](https://vitest.dev/).
+
+### Run all tests
+
+```bash
+pnpm vitest
 ```
 
-Using npm:
+## 🚀 Deployment
 
-```shell
-npm run dev
+### Manually build a function
+
+```bash
+shopify app function build
 ```
 
-Using pnpm:
+### Deploy to Shopify
 
-```shell
-pnpm run dev
+```bash
+shopify app deploy
 ```
 
-Open the URL generated in your console. Once you grant permission to the app, you can start development (such as generating extensions).
+### ⚠️ Note: Delivery option handle values can change between environments and deployments. It is recommended to rely on delivery option titles or use metafields to associate specific behaviors to delivery methods.
 
-## Developer resources
+---
 
-- [Introduction to Shopify apps](https://shopify.dev/docs/apps/getting-started)
-- [App extensions](https://shopify.dev/docs/apps/build/app-extensions)
-- [Extension only apps](https://shopify.dev/docs/apps/build/app-extensions/build-extension-only-app)
-- [Shopify CLI](https://shopify.dev/docs/apps/tools/cli)
-# shopify-functions
+## 📁 Project Structure
+
+```bash
+extensions/
+├── bulk-delivery-option/
+│   ├── src/
+│   │   └── run.ts          # Main function logic
+│   ├── test/
+│   │   └── run.test.ts     # Unit tests
+│   └── shopify.function.extension.toml
+├── installation-delivery-option/
+│   ├── src/
+│   │   └── run.ts
+│   ├── test/
+│   │   └── run.test.ts
+│   └── shopify.function.extension.toml
+└── checkout-function.toml
+```
