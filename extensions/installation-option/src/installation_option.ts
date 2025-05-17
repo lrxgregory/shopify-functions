@@ -45,7 +45,7 @@ export function run(input: InstallationDeliveryRunInput): FunctionRunResult {
     isDeliveryOptionOfType(option, DELIVERY_OPTIONS.INSTALLATION)
   );
 
-  if (!hasInstallationProduct && installationOptions.length > 0) {
+  if (!hasInstallationProduct && installationOptions) {
     return {
       operations: [
         { hide: { deliveryOptionHandle: installationOptions[0].handle } },
