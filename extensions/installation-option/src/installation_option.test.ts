@@ -144,15 +144,15 @@ describe("installation delivery", () => {
     ]);
   });
 
-  it("should hide installation option when installation product is NOT present (value === undefined)", () => {
+  it("should do nothing if there is no installation delivery option at all", () => {
     const input = {
       cart: {
         lines: [
           {
             merchandise: {
               product: {
-                title: "Vélo sans installation",
-                metafield: undefined,
+                title: "Chaise",
+                metafield: { value: "false" },
               },
             },
           },
@@ -160,9 +160,8 @@ describe("installation delivery", () => {
         deliveryGroups: [
           {
             deliveryOptions: [
-              { handle: "standard", title: "Standard" },
-              { handle: "express", title: "Express" },
-              { handle: "installation", title: "Livraison + installation" },
+              { handle: "standard", title: "Livraison standard" },
+              { handle: "express", title: "Livraison rapide" },
             ],
           },
         ],
@@ -174,9 +173,41 @@ describe("installation delivery", () => {
 
     const result = run(input);
 
-    // On cache l'option installation
+    expect(result.operations).toEqual([]);
+  });
+
+  it("should hide the first matched installation option if multiple match", () => {
+    const input = {
+      cart: {
+        lines: [
+          {
+            merchandise: {
+              product: {
+                title: "Lampe",
+                metafield: { value: "false" },
+              },
+            },
+          },
+        ],
+        deliveryGroups: [
+          {
+            deliveryOptions: [
+              { handle: "std", title: "Standard" },
+              { handle: "fr_handle", title: "Livraison + installation" },
+              { handle: "en_handle", title: "Delivery and installation" },
+            ],
+          },
+        ],
+      },
+      deliveryCustomization: {
+        metafield: () => ({ value: "" }),
+      },
+    };
+
+    const result = run(input);
+
     expect(result.operations).toEqual([
-      { hide: { deliveryOptionHandle: "installation" } },
+      { hide: { deliveryOptionHandle: "fr_handle" } },
     ]);
   });
 });

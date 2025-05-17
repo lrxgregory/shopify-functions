@@ -1,7 +1,6 @@
-import type {
-  FunctionRunResult,
-  Operation
-} from "../generated/api";
+import type { FunctionRunResult } from "../generated/api";
+import { DELIVERY_OPTIONS } from "./config.ts";
+import { isDeliveryOptionOfType } from "./isDeliveryOptionOfType.ts";
 
 interface InstallationDeliveryRunInput {
   cart: {
@@ -34,22 +33,25 @@ const NO_CHANGES: FunctionRunResult = {
 export function run(input: InstallationDeliveryRunInput): FunctionRunResult {
   const lines = input.cart.lines;
 
-  const hasInstallationProduct = lines.some(line =>
-    line.merchandise.product.metafield?.value === "true"
+  const hasInstallationProduct = lines.some(
+    (line) => line.merchandise.product.metafield?.value === "true"
   );
 
-  const operations: Operation[] = [];
+  const allOptions = input.cart.deliveryGroups.flatMap(
+    (group) => group.deliveryOptions
+  );
 
-  const allOptions = input.cart.deliveryGroups
-    .flatMap(group => group.deliveryOptions);
+  const installationOptions = allOptions.filter((option) =>
+    isDeliveryOptionOfType(option, DELIVERY_OPTIONS.INSTALLATION)
+  );
 
-  const installationOption = allOptions.find(o => o.title === "Livraison + installation");
-
-  if (!hasInstallationProduct) {
-    if (installationOption) {
-      operations.push({ hide: { deliveryOptionHandle: installationOption.handle } });
-    }
+  if (!hasInstallationProduct && installationOptions.length > 0) {
+    return {
+      operations: [
+        { hide: { deliveryOptionHandle: installationOptions[0].handle } },
+      ],
+    };
   }
 
-  return operations.length ? { operations } : NO_CHANGES;
+  return NO_CHANGES;
 }
