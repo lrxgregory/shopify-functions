@@ -2,6 +2,7 @@ import type {
   FunctionRunResult,
   Operation
 } from "../generated/api";
+import { isBulk, isExpress, isStandard } from "./identifyDeliveryType.ts";
 
 interface BulkDeliveryRunInput {
   cart: {
@@ -32,7 +33,9 @@ const NO_CHANGES: FunctionRunResult = {
 };
 
 export function run(input: BulkDeliveryRunInput): FunctionRunResult {
-  const lines = input.cart.lines;
+  const { lines, deliveryGroups } = input.cart;
+
+  console.log("deliveryGroups", JSON.stringify(deliveryGroups, null, 2));
 
   const allBulk = lines.every(line =>
     line.merchandise.product.metafield?.value === "true"
@@ -40,25 +43,28 @@ export function run(input: BulkDeliveryRunInput): FunctionRunResult {
 
   const operations: Operation[] = [];
 
-  const allOptions = input.cart.deliveryGroups
-    .flatMap(group => group.deliveryOptions);
-
-  const standardOption = allOptions.find(o => o.title === "Standard");
-  const expressOption = allOptions.find(o => o.title === "Express");
-  const bulkOption = allOptions.find(o => o.title === "Bulk");
-
-  console.log("bulkOption", bulkOption);
-
   if (allBulk) {
-    if (standardOption) {
-      operations.push({ hide: { deliveryOptionHandle: standardOption.handle } });
-    }
-    if (expressOption) {
-      operations.push({ hide: { deliveryOptionHandle: expressOption.handle } });
-    }
+    // All products are bulk - we hide Standard/Express in all groups
+    deliveryGroups.forEach(group => {
+      group.deliveryOptions.forEach(option => {
+        if (isStandard(option)) {
+          operations.push({ hide: { deliveryOptionHandle: option.handle } });
+        }
+        if (isExpress(option)) {
+          operations.push({ hide: { deliveryOptionHandle: option.handle } });
+        }
+      });
+    });
   } else {
-    if (bulkOption) {
-      operations.push({ hide: { deliveryOptionHandle: bulkOption.handle } });
+    // At least one non bulk product - we hide ONLY the bulk of the main group (not the split)
+    if (deliveryGroups.length > 0) {
+      const mainGroup = deliveryGroups[0]; // First group = main group
+
+      mainGroup.deliveryOptions.forEach(option => {
+        if (isBulk(option)) {
+          operations.push({ hide: { deliveryOptionHandle: option.handle } });
+        }
+      });
     }
   }
 
