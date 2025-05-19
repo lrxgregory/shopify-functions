@@ -1,4 +1,4 @@
-# 🧩 Shopify Functions – Conditional Delivery Options
+# Shopify Functions – Conditional Delivery Options
 
 This project contains two custom **Shopify Functions** used to **dynamically hide delivery options** based on the contents of the cart.
 
@@ -9,7 +9,7 @@ Available functions:
 
 ---
 
-## 🧠 What are Shopify Functions?
+## What are Shopify Functions?
 
 **Shopify Functions** allow developers to inject **custom backend logic** directly into Shopify's checkout and other critical paths. They are **server-side, high-performance**, and compiled to WebAssembly (Wasm).
 
@@ -20,18 +20,18 @@ In this project, we use **delivery customization functions** to:
 
 ---
 
-## 🚚 1. `bulk-delivery-option` – XXL Delivery
+## 1. `bulk-delivery-option` – XXL Delivery
 
-### 🎯 Purpose
+### Purpose
 
 Manage orders that contain bulky products requiring a specific "Bulk Delivery" option.
 
-### 🔍 Business Rules
+### Business Rules
 
 - If **all products** in the cart are marked as `bulk`, we **hide** the `Standard` and `Express` delivery options.
 - If **at least one product** is **not bulk**, we **hide** the `Bulk` delivery option. A **split shipment** logic will then be handled upstream.
 
-### 📦 Identifying bulk products
+### Identifying bulk products
 
 Each product is tagged with a metafield (e.g., `namespace:delivery`, `key:bulk`) set to `"true"` when it requires bulk delivery.
 
@@ -39,7 +39,7 @@ Each product is tagged with a metafield (e.g., `namespace:delivery`, `key:bulk`)
 product.metafield?.value === "true";
 ```
 
-## 🛠 Example Input / Output
+## Example Input / Output
 
 ### Input:
 
@@ -83,19 +83,19 @@ product.metafield?.value === "true";
 }
 ```
 
-## 🛠 2. installation-delivery-option – Delivery + Installation
+## 2. installation-delivery-option – Delivery + Installation
 
-### 🎯 Purpose
+### Purpose
 
 Hide the **"Delivery + Installation"** option when no product in the cart requires installation.
 
-### 🔍 Business Rules
+### Business Rules
 
 Products may define a metafield (e.g., `namespace:delivery`, `key:installation`) with value `"true"`.
 
 If **no product** in the cart requires installation → the delivery option is **hidden**.
 
-### 💡 Example
+### Example
 
 - Couch = installation: true
 - Lamp = installation: false
@@ -104,17 +104,17 @@ If **no product** in the cart requires installation → the delivery option is *
 
 ---
 
-## 🧪 Running Tests
+## Running Tests
 
 The functions are unit tested with [Vitest](https://vitest.dev/).
 
 ### Run all tests
 
 ```bash
-pnpm vitest
+npm run test
 ```
 
-## 🚀 Deployment
+## Deployment
 
 ### Manually build a function
 
@@ -128,7 +128,7 @@ shopify app function build
 shopify app deploy
 ```
 
-### ⚠️ Note: Delivery option handle values can change between environments and deployments. It is recommended to rely on delivery option titles or use metafields to associate specific behaviors to delivery methods.
+### Note: Delivery option handle values can change between environments and deployments. It is recommended to rely on delivery option titles or use metafields to associate specific behaviors to delivery methods.
 
 ---
 
@@ -136,17 +136,22 @@ shopify app deploy
 
 ```bash
 extensions/
-├── bulk-delivery-option/
+├── bulk-delivery/                    # Bulk delivery function
 │   ├── src/
-│   │   └── run.ts          # Main function logic
-│   ├── test/
-│   │   └── run.test.ts     # Unit tests
-│   └── shopify.function.extension.toml
-├── installation-delivery-option/
+│   │   ├── bulk-delivery.ts        # Main function logic
+│   │   ├── bulk_delivery.test.ts    # Unit tests
+│   │   ├── config.ts               # Configuration and constants
+│   │   ├── identifyDeliveryType.ts # Delivery type identification
+│   │   └── index.ts                # Exports
+│   ├── shopify.extension.toml       # Extension configuration
+│   └── package.json
+├── installation-option/             # Installation option function
 │   ├── src/
-│   │   └── run.ts
-│   ├── test/
-│   │   └── run.test.ts
-│   └── shopify.function.extension.toml
-└── checkout-function.toml
+│   │   ├── config.ts               # Configuration
+│   │   ├── installation_option.ts   # Main function
+│   │   ├── installation_option.test.ts  # Tests
+│   │   └── isDeliveryOptionOfType.ts    # Type utilities
+│   ├── shopify.extension.toml       # Extension config
+│   └── package.json
+└── checkout-function.toml           # Root config
 ```
